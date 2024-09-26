@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: student-result
+
+server:
+  port: 8081
+
+student:
+  api:
+    base-url: http://software.diu.edu.bd:8006
+    end-point: /result/studentInfo
