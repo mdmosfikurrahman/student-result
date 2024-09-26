@@ -11,4 +11,5 @@ public class StudentApiConfig {
     private String baseUrl;
     private String studentInfoEndPoint;
     private String semesterInfoEndPoint;
+    private String studentResultEndPoint;
 }

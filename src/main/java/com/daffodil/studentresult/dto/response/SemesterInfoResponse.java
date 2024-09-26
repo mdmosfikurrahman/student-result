@@ -1,4 +1,4 @@
-package com.daffodil.studentresult.dto;
+package com.daffodil.studentresult.dto.response;
 
 import lombok.Builder;
 import lombok.Data;

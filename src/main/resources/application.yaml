@@ -10,3 +10,4 @@ student:
     base-url: http://software.diu.edu.bd:8006
     semester-info-end-point: /result/semesterList
     student-info-end-point: /result/studentInfo
+    student-result-end-point: /result

@@ -1,9 +1,11 @@
 package com.daffodil.studentresult.service.impl;
 
 import com.daffodil.studentresult.config.StudentApiConfig;
-import com.daffodil.studentresult.dto.SemesterInfoResponse;
-import com.daffodil.studentresult.dto.StudentInfoResponse;
+import com.daffodil.studentresult.dto.response.ResultInfoResponse;
+import com.daffodil.studentresult.dto.response.SemesterInfoResponse;
+import com.daffodil.studentresult.dto.response.StudentInfoResponse;
 import com.daffodil.studentresult.exception.StudentApiException;
+import com.daffodil.studentresult.model.ResultInfo;
 import com.daffodil.studentresult.model.SemesterInfo;
 import com.daffodil.studentresult.model.StudentInfo;
 import com.daffodil.studentresult.service.StudentResultService;
@@ -16,9 +18,10 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -28,25 +31,24 @@ public class StudentResultServiceImpl implements StudentResultService {
     private final RestTemplate restTemplate;
     private final StudentApiConfig studentApiConfig;
 
-    private String buildUrl(String baseUrl, String endPoint, String paramName, String paramValue) {
-        return UriComponentsBuilder.fromHttpUrl(baseUrl)
-                .path(endPoint)
-                .queryParam(paramName, paramValue)
-                .toUriString();
+    private String buildUrl(String baseUrl, String endPoint, Map<String, String> queryParams) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .path(endPoint);
+        queryParams.forEach(uriBuilder::queryParam);
+        return uriBuilder.toUriString();
+    }
+
+    private HttpHeaders createHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
     }
 
     private <T> T executeRequest(String url, Class<T> responseType) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
 
         try {
-            ResponseEntity<T> responseEntity = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    responseType
-            );
+            ResponseEntity<T> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
             log.info("RECEIVED RESPONSE SUCCESSFULLY");
             return Objects.requireNonNull(responseEntity.getBody(), "No response received from API");
         } catch (HttpClientErrorException | HttpServerErrorException exception) {
@@ -57,33 +59,53 @@ public class StudentResultServiceImpl implements StudentResultService {
 
     @Override
     public StudentInfoResponse getStudentInfo(String studentId) {
-        String baseUrl = studentApiConfig.getBaseUrl();
-        String endPoint = studentApiConfig.getStudentInfoEndPoint();
-        String url = buildUrl(baseUrl, endPoint, "studentId", studentId);
+        String url = buildUrl(studentApiConfig.getBaseUrl(), studentApiConfig.getStudentInfoEndPoint(), Map.of("studentId", studentId));
         StudentInfo studentInfo = executeRequest(url, StudentInfo.class);
-
         return buildStudentResponse(studentInfo);
     }
 
     @Override
     public List<SemesterInfoResponse> getSemesterInfo() {
-        String baseUrl = studentApiConfig.getBaseUrl();
-        String semesterEndPoint = studentApiConfig.getSemesterInfoEndPoint();
-        String url = baseUrl + semesterEndPoint;
-
+        String url = buildUrl(studentApiConfig.getBaseUrl(), studentApiConfig.getSemesterInfoEndPoint(), Map.of());
         SemesterInfo[] semesters = executeRequest(url, SemesterInfo[].class);
-
         return buildSemesterResponseList(semesters);
     }
 
-    private List<SemesterInfoResponse> buildSemesterResponseList(SemesterInfo[] semesters) {
-        return Stream.of(semesters)
-                .map(semester -> SemesterInfoResponse.builder()
-                        .semesterId(semester.getSemesterId())
-                        .semesterYear(semester.getSemesterYear())
-                        .semesterName(semester.getSemesterName())
-                        .build())
+    @Override
+    public List<ResultInfoResponse> getStudentResults(String studentId, String semesterId) {
+        String url = buildUrl(studentApiConfig.getBaseUrl(), studentApiConfig.getStudentResultEndPoint(), Map.of("studentId", studentId, "semesterId", semesterId));
+        ResultInfo[] results = executeRequest(url, ResultInfo[].class);
+        return buildResultResponseList(results);
+    }
+
+    private List<ResultInfoResponse> buildResultResponseList(ResultInfo[] resultInfos) {
+        return Arrays.stream(resultInfos)
+                .map(this::buildResultResponse)
                 .toList();
+    }
+
+    private ResultInfoResponse buildResultResponse(ResultInfo result) {
+        return ResultInfoResponse.builder()
+                .courseTitle(result.getCourseTitle())
+                .courseCredit(result.getTotalCredit())
+                .gradePoint(result.getPointEquivalent())
+                .gradeLetter(result.getGradeLetter())
+                .totalCgpa(result.getCgpa())
+                .build();
+    }
+
+    private List<SemesterInfoResponse> buildSemesterResponseList(SemesterInfo[] semesters) {
+        return Arrays.stream(semesters)
+                .map(this::buildSemesterResponse)
+                .toList();
+    }
+
+    private SemesterInfoResponse buildSemesterResponse(SemesterInfo semester) {
+        return SemesterInfoResponse.builder()
+                .semesterId(semester.getSemesterId())
+                .semesterYear(semester.getSemesterYear())
+                .semesterName(semester.getSemesterName())
+                .build();
     }
 
     private StudentInfoResponse buildStudentResponse(StudentInfo studentInfo) {
