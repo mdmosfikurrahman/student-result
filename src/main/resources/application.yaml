@@ -8,4 +8,5 @@ server:
 student:
   api:
     base-url: http://software.diu.edu.bd:8006
-    end-point: /result/studentInfo
+    semester-info-end-point: /result/semesterList
+    student-info-end-point: /result/studentInfo

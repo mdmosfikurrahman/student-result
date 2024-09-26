@@ -9,5 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "student.api")
 public class StudentApiConfig {
     private String baseUrl;
-    private String endPoint;
+    private String studentInfoEndPoint;
+    private String semesterInfoEndPoint;
 }

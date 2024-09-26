@@ -1,17 +1,24 @@
-package com.daffodil.studentresult.service;
+package com.daffodil.studentresult.service.impl;
 
 import com.daffodil.studentresult.config.StudentApiConfig;
+import com.daffodil.studentresult.dto.SemesterInfoResponse;
+import com.daffodil.studentresult.dto.StudentInfoResponse;
+import com.daffodil.studentresult.model.SemesterInfo;
 import com.daffodil.studentresult.model.StudentInfo;
-import com.daffodil.studentresult.model.StudentResponse;
+import com.daffodil.studentresult.service.StudentResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.List;
+
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class StudentResultServiceImpl implements StudentResultService {
 
@@ -46,17 +53,34 @@ public class StudentResultServiceImpl implements StudentResultService {
     }
 
     @Override
-    public StudentResponse getStudentInfo(String studentId) {
+    public StudentInfoResponse getStudentInfo(String studentId) {
         String baseUrl = studentApiConfig.getBaseUrl();
-        String endPoint = studentApiConfig.getEndPoint();
+        String endPoint = studentApiConfig.getStudentInfoEndPoint();
         String url = buildUrl(baseUrl, endPoint, "studentId", studentId);
         StudentInfo studentInfo = executeRequest(url, StudentInfo.class);
 
         return buildStudentResponse(studentInfo);
     }
 
-    private StudentResponse buildStudentResponse(StudentInfo studentInfo) {
-        return StudentResponse.builder()
+    @Override
+    public SemesterInfoResponse getSemesterInfo() {
+        String baseUrl = studentApiConfig.getBaseUrl();
+        String semesterEndPoint = studentApiConfig.getSemesterInfoEndPoint();
+        String url = baseUrl + semesterEndPoint;
+
+        SemesterInfo[] semesters = executeRequest(url, SemesterInfo[].class);
+        return buildSemesterResponse(semesters);
+    }
+
+    private SemesterInfoResponse buildSemesterResponse(SemesterInfo[] semesters) {
+        return SemesterInfoResponse.builder()
+                .semesters(List.of(semesters))
+                .build();
+    }
+
+
+    private StudentInfoResponse buildStudentResponse(StudentInfo studentInfo) {
+        return StudentInfoResponse.builder()
                 .studentId(studentInfo.getStudentId())
                 .studentName(studentInfo.getStudentName())
                 .campusName(studentInfo.getCampusName())

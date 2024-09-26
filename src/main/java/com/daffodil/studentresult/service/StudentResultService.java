@@ -1,9 +1,11 @@
 package com.daffodil.studentresult.service;
 
-import com.daffodil.studentresult.model.StudentResponse;
-import org.springframework.stereotype.Service;
+import com.daffodil.studentresult.dto.SemesterInfoResponse;
+import com.daffodil.studentresult.dto.StudentInfoResponse;
 
-@Service
+import java.util.List;
+
 public interface StudentResultService {
-    StudentResponse getStudentInfo(String studentId);
+    StudentInfoResponse getStudentInfo(String studentId);
+    List<SemesterInfoResponse> getSemesterInfo();
 }

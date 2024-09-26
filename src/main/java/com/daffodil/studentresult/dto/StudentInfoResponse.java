@@ -1,11 +1,11 @@
-package com.daffodil.studentresult.model;
+package com.daffodil.studentresult.dto;
 
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-public class StudentResponse {
+public class StudentInfoResponse {
     private String studentId;
     private String studentName;
     private String campusName;
