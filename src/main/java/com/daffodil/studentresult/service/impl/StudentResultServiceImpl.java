@@ -49,7 +49,6 @@ public class StudentResultServiceImpl implements StudentResultService {
 
         try {
             ResponseEntity<T> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
-            log.info("RECEIVED RESPONSE SUCCESSFULLY");
             return Objects.requireNonNull(responseEntity.getBody(), "No response received from API");
         } catch (HttpClientErrorException | HttpServerErrorException exception) {
             log.error("Error details: ", exception);
