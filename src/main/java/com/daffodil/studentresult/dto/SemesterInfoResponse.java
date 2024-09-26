@@ -10,4 +10,3 @@ public class SemesterInfoResponse {
     private int semesterYear;
     private String semesterName;
 }
-}

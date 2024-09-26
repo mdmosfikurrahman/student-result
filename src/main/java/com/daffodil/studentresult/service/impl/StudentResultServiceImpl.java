@@ -3,6 +3,7 @@ package com.daffodil.studentresult.service.impl;
 import com.daffodil.studentresult.config.StudentApiConfig;
 import com.daffodil.studentresult.dto.SemesterInfoResponse;
 import com.daffodil.studentresult.dto.StudentInfoResponse;
+import com.daffodil.studentresult.exception.StudentApiException;
 import com.daffodil.studentresult.model.SemesterInfo;
 import com.daffodil.studentresult.model.StudentInfo;
 import com.daffodil.studentresult.service.StudentResultService;
@@ -16,6 +17,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -45,10 +48,10 @@ public class StudentResultServiceImpl implements StudentResultService {
                     responseType
             );
             log.info("RECEIVED RESPONSE SUCCESSFULLY");
-            return responseEntity.getBody();
+            return Objects.requireNonNull(responseEntity.getBody(), "No response received from API");
         } catch (HttpClientErrorException | HttpServerErrorException exception) {
             log.error("Error details: ", exception);
-            throw exception;
+            throw new StudentApiException("API Error: " + exception.getMessage(), exception, exception.getStatusCode().value());
         }
     }
 
@@ -63,21 +66,25 @@ public class StudentResultServiceImpl implements StudentResultService {
     }
 
     @Override
-    public SemesterInfoResponse getSemesterInfo() {
+    public List<SemesterInfoResponse> getSemesterInfo() {
         String baseUrl = studentApiConfig.getBaseUrl();
         String semesterEndPoint = studentApiConfig.getSemesterInfoEndPoint();
         String url = baseUrl + semesterEndPoint;
 
         SemesterInfo[] semesters = executeRequest(url, SemesterInfo[].class);
-        return buildSemesterResponse(semesters);
+
+        return buildSemesterResponseList(semesters);
     }
 
-    private SemesterInfoResponse buildSemesterResponse(SemesterInfo[] semesters) {
-        return SemesterInfoResponse.builder()
-                .semesters(List.of(semesters))
-                .build();
+    private List<SemesterInfoResponse> buildSemesterResponseList(SemesterInfo[] semesters) {
+        return Stream.of(semesters)
+                .map(semester -> SemesterInfoResponse.builder()
+                        .semesterId(semester.getSemesterId())
+                        .semesterYear(semester.getSemesterYear())
+                        .semesterName(semester.getSemesterName())
+                        .build())
+                .toList();
     }
-
 
     private StudentInfoResponse buildStudentResponse(StudentInfo studentInfo) {
         return StudentInfoResponse.builder()

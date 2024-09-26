@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/students")
 @RequiredArgsConstructor
@@ -26,9 +28,9 @@ public class StudentResultRestController {
     }
 
     @GetMapping()
-    public ResponseEntity<SemesterInfoResponse> getSemesterInfo() {
+    public ResponseEntity<List<SemesterInfoResponse>> getSemesterInfo() {
         try {
-            SemesterInfoResponse response = studentResultService.getSemesterInfo();
+            List<SemesterInfoResponse> response = studentResultService.getSemesterInfo();
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
