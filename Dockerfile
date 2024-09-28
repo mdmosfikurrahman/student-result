@@ -10,5 +10,5 @@ RUN ./gradlew clean build -x test
 FROM openjdk:17.0.1-jdk-slim
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar diu-student-result.jar
-EXPOSE 8080
+EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "diu-student-result.jar"]
