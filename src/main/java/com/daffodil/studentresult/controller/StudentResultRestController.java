@@ -5,6 +5,7 @@ import com.daffodil.studentresult.dto.request.StudentResultRequest;
 import com.daffodil.studentresult.dto.response.ResultInfoResponse;
 import com.daffodil.studentresult.dto.response.SemesterInfoResponse;
 import com.daffodil.studentresult.dto.response.StudentInfoResponse;
+import com.daffodil.studentresult.exception.StudentApiException;
 import com.daffodil.studentresult.service.StudentResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,12 +22,15 @@ public class StudentResultRestController {
     private final StudentResultService studentResultService;
 
     @PostMapping("/info")
-    public ResponseEntity<StudentInfoResponse> getStudentInfo(@RequestBody StudentInfoRequest request) {
+    public ResponseEntity<?> getStudentInfo(@RequestBody StudentInfoRequest request) {
         try {
             StudentInfoResponse response = studentResultService.getStudentInfo(request.getStudentId());
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        } catch (StudentApiException e) {
+            if (e.getStatusCode() == 404) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 

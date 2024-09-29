@@ -12,12 +12,12 @@ public class ResultInfo {
     private String customCourseId;
     private String courseTitle;
     private double totalCredit;
-    private Double grandTotal; // Can be null
+    private Double grandTotal;
     private double pointEquivalent;
     private String gradeLetter;
     private double cgpa;
     private String blocked;
-    private String blockCause; // Can be null
+    private String blockCause;
     private String tevalSubmitted;
     private String teval;
     private String semesterAccountsClearance;

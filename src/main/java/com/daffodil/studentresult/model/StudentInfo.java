@@ -1,9 +1,14 @@
 package com.daffodil.studentresult.model;
 
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
+@Entity
+@Table(name = "student_info")
 public class StudentInfo {
+
+    @Id
     private String studentId;
     private String fkCampus;
     private String campusName;
@@ -22,4 +27,5 @@ public class StudentInfo {
     private String semesterId;
     private String semesterName;
     private String shift;
+
 }

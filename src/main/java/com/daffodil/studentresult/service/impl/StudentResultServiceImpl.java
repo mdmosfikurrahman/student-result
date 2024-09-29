@@ -8,6 +8,7 @@ import com.daffodil.studentresult.exception.StudentApiException;
 import com.daffodil.studentresult.model.ResultInfo;
 import com.daffodil.studentresult.model.SemesterInfo;
 import com.daffodil.studentresult.model.StudentInfo;
+import com.daffodil.studentresult.repository.StudentInfoRepository;
 import com.daffodil.studentresult.service.StudentResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +19,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -30,6 +28,7 @@ public class StudentResultServiceImpl implements StudentResultService {
 
     private final RestTemplate restTemplate;
     private final StudentApiConfig studentApiConfig;
+    private final StudentInfoRepository studentInfoRepository;
 
     private String buildUrl(String baseUrl, String endPoint, Map<String, String> queryParams) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(baseUrl)
@@ -52,14 +51,30 @@ public class StudentResultServiceImpl implements StudentResultService {
             return Objects.requireNonNull(responseEntity.getBody(), "No response received from API");
         } catch (HttpClientErrorException | HttpServerErrorException exception) {
             log.error("Error details: ", exception);
-            throw new StudentApiException("API Error: " + exception.getMessage(), exception, exception.getStatusCode().value());
+            throw new StudentApiException("API Error: " + exception.getMessage(), exception.getStatusCode().value());
         }
     }
 
     @Override
     public StudentInfoResponse getStudentInfo(String studentId) {
+        Optional<StudentInfo> studentInfoOptional = studentInfoRepository.findByStudentId(studentId);
+
+        if (studentInfoOptional.isPresent()) {
+            log.info("Student info found in the database for studentId: {}", studentId);
+            return buildStudentResponse(studentInfoOptional.get());
+        }
+
         String url = buildUrl(studentApiConfig.getBaseUrl(), studentApiConfig.getStudentInfoEndPoint(), Map.of("studentId", studentId));
-        StudentInfo studentInfo = executeRequest(url, StudentInfo.class);
+        StudentInfo studentInfo;
+        try {
+            studentInfo = executeRequest(url, StudentInfo.class);
+        } catch (Exception e) {
+            throw new StudentApiException("Student information not found", 404);
+        }
+
+        log.info("Storing student info in the database for studentId: {}", studentId);
+        studentInfoRepository.save(studentInfo);
+
         return buildStudentResponse(studentInfo);
     }
 
